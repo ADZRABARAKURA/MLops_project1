@@ -1,40 +1,48 @@
 import boto3
-from botocore.exceptions import NoCredentialsError, ClientError
+import pickle
+import pandas as pd
 
 
-# Функция для скачивания файла из S3
-def download_from_s3(bucket_name, s3_key, download_path):
-    # Создаем клиент для S3
+def download_from_s3(bucket_name, s3_file_path, local_file_path, aws_access_key,
+                     aws_secret_key, endpoint_url):
+    """Загружает файл из S3."""
     s3 = boto3.client(
         's3',
-        endpoint_url='http://localhost:9000',  # для MinIO
-        aws_access_key_id='minioadmin',        # ключ MinIO
-        aws_secret_access_key='minioadmin',    # секрет MinIO
+        aws_access_key_id='minioadmin',
+        aws_secret_access_key='minioadmin',
+        endpoint_url='http://localhost:9000'
     )
-    try:
-        # Скачиваем файл
-        s3.download_file(bucket_name, s3_key, download_path)
-        print(f"File {s3_key} downloaded to {download_path}.")
-    except NoCredentialsError:
-        print("Credentials not available.")
-    except ClientError as e:
-        print(f"Error downloading file: {e}")
+    s3.download_file(bucket_name, s3_file_path, local_file_path)
+    print(f"Файл {s3_file_path} загружен в {local_file_path}.")
 
 
-# Функция для загрузки файла в S3
-def upload_to_s3(bucket_name, file_path, s3_key):
-    # Создаем клиент для S3
+def save_model_to_s3(model, bucket_name, s3_file_path, aws_access_key,
+                     aws_secret_key, endpoint_url):
+    """Сохраняет модель в S3."""
+    local_model_path = "model.pkl"
+    with open(local_model_path, 'wb') as f:
+        pickle.dump(model, f)
+
     s3 = boto3.client(
         's3',
-        endpoint_url='http://localhost:9000',  # для MinIO
-        aws_access_key_id='minioadmin',        # ключ MinIO
-        aws_secret_access_key='minioadmin',    # секрет MinIO
+        aws_access_key_id='minioadmin',
+        aws_secret_access_key='minioadmin',
+        endpoint_url='http://localhost:9000'
     )
-    try:
-        # Загружаем файл
-        s3.upload_file(file_path, bucket_name, s3_key)
-        print(f"File {file_path} uploaded to {s3_key}.")
-    except NoCredentialsError:
-        print("Credentials not available.")
-    except ClientError as e:
-        print(f"Error uploading file: {e}")
+    s3.upload_file(local_model_path, bucket_name, s3_file_path)
+    print(f"Модель сохранена в {bucket_name}/{s3_file_path}.")
+
+
+def load_csv_from_s3(bucket_name, s3_file_path, aws_access_key,
+                     aws_secret_key, endpoint_url):
+    """Загружает CSV-файл из S3 и возвращает DataFrame."""
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id='minioadmin',
+        aws_secret_access_key='minioadmin',
+        endpoint_url='http://localhost:9000'
+    )
+    obj = s3.get_object(Bucket=bucket_name, Key=s3_file_path)
+    df = pd.read_csv(obj['Body'])
+    print(f"Файл {s3_file_path} успешно загружен из S3.")
+    return df

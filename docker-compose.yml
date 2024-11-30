@@ -1,4 +1,5 @@
-version: '3.7'
+version: '3.8'
+
 services:
   minio:
     image: minio/minio
@@ -10,3 +11,35 @@ services:
       MINIO_ROOT_USER: "minioadmin"
       MINIO_ROOT_PASSWORD: "minioadmin"
     command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+  mlflow:
+    image: mlflow:latest
+    container_name: mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      MLFLOW_TRACKING_URI: "http://0.0.0.0:5000"
+    volumes:
+      - ./mlruns:/mlflow/mlruns
+
+  experiment_runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: experiment_runner
+    depends_on:
+      - minio
+      - mlflow
+    environment:
+      AWS_ACCESS_KEY_ID: "minioadmin"
+      AWS_SECRET_ACCESS_KEY: "minioadmin"
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"
+      S3_ENDPOINT_URL: "http://minio:9000"
+    volumes:
+      - ./data:/app/data
+    command: ["python", "run_experiments.py", "--config", "/app/config.json"]
+
+volumes:
+  minio_data:
