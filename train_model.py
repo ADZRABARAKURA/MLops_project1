@@ -2,8 +2,8 @@ import json
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from mlflow import log_metric, log_param, start_run
-import pandas
-#from s3_utils import load_csv_from_s3
+import pandas as pd
+# rom s3_utils import load_csv_from_s3
 
 
 def train_and_log_model(config_path, dataset_path, experiment_name):
