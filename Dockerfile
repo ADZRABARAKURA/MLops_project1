@@ -1,33 +1,33 @@
-# Dockerfile для MLFlow
+# Dockerfile РґР»СЏ MLFlow
 FROM python:3.13-slim
 
-# Установка необходимых библиотек
+# РЈСЃС‚Р°РЅРѕРІРєР° РЅРµРѕР±С…РѕРґРёРјС‹С… Р±РёР±Р»РёРѕС‚РµРє
 RUN pip install --no-cache-dir mlflow boto3 scikit-learn pandas
 
-# Установка рабочей директории
+# РЈСЃС‚Р°РЅРѕРІРєР° СЂР°Р±РѕС‡РµР№ РґРёСЂРµРєС‚РѕСЂРёРё
 WORKDIR /mlflow
 
-# Создание тома для хранения результатов экспериментов
+# РЎРѕР·РґР°РЅРёРµ С‚РѕРјР° РґР»СЏ С…СЂР°РЅРµРЅРёСЏ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ СЌРєСЃРїРµСЂРёРјРµРЅС‚РѕРІ
 VOLUME /mlflow/mlruns
 
-# Установка инструментов для работы с сетью
+# РЈСЃС‚Р°РЅРѕРІРєР° РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ СЃРµС‚СЊСЋ
 RUN apt-get update && apt-get install -y \
     curl \
     iputils-ping \
     && apt-get clean
 
-# Установка Poetry
+# РЈСЃС‚Р°РЅРѕРІРєР° Poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
-# Добавляем Poetry в PATH
+# Р”РѕР±Р°РІР»СЏРµРј Poetry РІ PATH
 ENV PATH="/root/.local/bin:$PATH"
 
-# Копируем проект в контейнер
+# РљРѕРїРёСЂСѓРµРј РїСЂРѕРµРєС‚ РІ РєРѕРЅС‚РµР№РЅРµСЂ
 WORKDIR /app
 COPY . /app
 
-# Устанавливаем зависимости проекта
+# РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РїСЂРѕРµРєС‚Р°
 RUN poetry config virtualenvs.create false && poetry install --no-dev
 
-# Команда по умолчанию
+# РљРѕРјР°РЅРґР° РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
 ENTRYPOINT ["python", "run_experiments.py"]
