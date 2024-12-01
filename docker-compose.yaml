@@ -15,7 +15,7 @@ services:
       - minio_data:/data
 
   mlflow:
-    image: mlflow:latest
+    image: mlflow:latest  # Используем собственный образ
     container_name: mlflow
     ports:
       - "5000:5000"
@@ -23,6 +23,7 @@ services:
       MLFLOW_TRACKING_URI: "http://0.0.0.0:5000"
     volumes:
       - ./mlruns:/mlflow/mlruns
+    entrypoint: ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--gunicorn-opts", "--timeout 120"]
 
   experiment_runner:
     build:
@@ -39,7 +40,6 @@ services:
       S3_ENDPOINT_URL: "http://minio:9000"
     volumes:
       - ./data:/app/data
-    command: ["python", "run_experiments.py", "--config", "/app/config.json"]
-
+    entrypoint: ["python", "run_experiments.py", "--config", "/app/config.json", "--dataset_path", "/app/data/Titanic-Dataset.csv", "--s3_bucket", "models-bucket", "--experiment_name", "RandomForestExperiment", "--aws_access_key", "minioadmin", "--aws_secret_key", "minioadmin", "--endpoint_url", "http://minio:9000"]
 volumes:
   minio_data:
